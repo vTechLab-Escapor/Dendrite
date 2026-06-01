@@ -1,0 +1,24 @@
+name: dendrite
+description: AI-Native Non-Linear Mobile Knowledge Space
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^8.1.3
+  drift: ^2.14.1
+  sqlite3: ^2.4.1
+  path_provider: ^2.1.1
+  path: ^1.8.3
+  http: ^1.2.0
+  web_socket_channel: ^2.4.1
+  rxdart: ^0.27.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  drift_dev: ^2.14.1
+  build_runner: ^2.4.8
