@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class CustomSelectionMenu extends StatelessWidget {
+class CustomSelectionMenu extends StatefulWidget {
   final Widget child;
   final Function(String selectedText) onBranchAsk;
 
@@ -11,8 +11,20 @@ class CustomSelectionMenu extends StatelessWidget {
   });
 
   @override
+  State<CustomSelectionMenu> createState() => _CustomSelectionMenuState();
+}
+
+class _CustomSelectionMenuState extends State<CustomSelectionMenu> {
+  String _selectedText = '';
+
+  @override
   Widget build(BuildContext context) {
     return SelectionArea(
+      onSelectionChanged: (content) {
+        setState(() {
+          _selectedText = content?.plainText ?? '';
+        });
+      },
       contextMenuBuilder: (context, selectableRegionState) {
         final List<ContextMenuButtonItem> buttonItems = 
             selectableRegionState.contextMenuButtonItems;
@@ -22,9 +34,8 @@ class CustomSelectionMenu extends StatelessWidget {
           ContextMenuButtonItem(
             label: '🌿 Branch Ask',
             onPressed: () {
-              final selection = selectableRegionState.currentSelection;
-              if (selection != null) {
-                onBranchAsk(selection.plainText);
+              if (_selectedText.isNotEmpty) {
+                widget.onBranchAsk(_selectedText);
               }
               selectableRegionState.hideToolbar();
             },
@@ -36,7 +47,7 @@ class CustomSelectionMenu extends StatelessWidget {
           buttonItems: buttonItems,
         );
       },
-      child: child,
+      child: widget.child,
     );
   }
 }

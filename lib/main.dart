@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dendrite/features/chat/widgets/chat_screen.dart';
 
 void main() {
   runApp(const DendriteApp());
@@ -15,9 +16,7 @@ class DendriteApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0D0D0D),
         primaryColor: const Color(0xFF10A37F),
       ),
-      home: const Scaffold(
-        body: Center(child: Text('Welcome to Dendrite')),
-      ),
+      home: const ChatScreen(),
     );
   }
 }
