@@ -15,6 +15,12 @@ class DendriteApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF0D0D0D),
         primaryColor: const Color(0xFF10A37F),
+        scrollbarTheme: ScrollbarThemeData(
+          thumbColor: WidgetStateProperty.all(Colors.transparent),
+          trackColor: WidgetStateProperty.all(Colors.transparent),
+          thickness: WidgetStateProperty.all(0.0),
+          interactive: false,
+        ),
       ),
       home: const ChatScreen(),
     );
