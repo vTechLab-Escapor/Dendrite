@@ -55,3 +55,8 @@ app.*.map.json
 /raccoon_skills/raccoon-ppt-skill/
 /raccoon_skills/raccoon-dataanalysis-skill/
 /android/build/
+/submission/intro/docassets/pg*.png
+/submission/intro/docassets/pdf_*.png
+/submission/intro/docassets/pdfpage_*.png
+/submission/intro/docassets/cand_*.jpg
+/submission/intro/docassets/raccoon_state.png
