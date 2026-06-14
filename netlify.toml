@@ -1,0 +1,12 @@
+# Netlify config for the Dendrite Flutter Web build.
+# Build the site first with:  flutter build web --release
+# then:  netlify deploy --prod --dir=build/web
+
+[build]
+  publish = "build/web"
+
+# Single-page-app fallback: route every path to index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -116,7 +116,7 @@ class _MindMapCanvasState extends State<MindMapCanvas> {
     if (widget.nodes.isEmpty) {
       return Center(
         child: Text(
-          '🌿 暂无对话树结构数据',
+          '🌿 No conversation tree yet',
           style: TextStyle(color: widget.isDarkMode ? Colors.grey : const Color(0xFF8E8E8F), fontSize: 13),
         ),
       );

@@ -1,0 +1,44 @@
+1
+00:00:11,267 --> 00:00:20,833
+这就是我们今天与 AI 对话的方式——一条消息接着一条消息，排成一条直线。但思考，并不是这样运作的。
+This is how we talk to AI today - one message after another, in a single straight line. But thinking doesn't work that way.
+
+2
+00:00:21,333 --> 00:00:30,993
+认识一下 Dendrite——一个 AI 知识空间，每一段对话都是一棵树，而不是一串信息流。注意看，回答正在实时地逐字生成。
+Meet Dendrite - an AI knowledge space where every conversation is a tree, not a feed. Watch the answer stream in, in real time.
+
+3
+00:00:31,493 --> 00:00:45,564
+这是核心的想法。选中任意一句话，然后分支。Dendrite 会就这个点展开一条全新的探索线索，并把你选中的内容作为上下文带过去。而你的主线，完全不受影响。
+Here's the core idea. Select any sentence, and branch. Dendrite spins off a whole new line of inquiry about exactly that, carrying your selection as context. Your main thread stays untouched.
+
+4
+00:00:46,064 --> 00:00:56,560
+分支还能再分支。你可以把一个旁支一直追到底——每一次岔路都会变成一条独立的、可以探索的线索，而不会埋没之前的内容。
+Branches can branch. Chase a tangent as far as you want - every detour becomes its own explorable thread instead of burying what came before.
+
+5
+00:00:57,060 --> 00:01:09,180
+打开思维导图，你就能看见自己思考的形状。发着光的那条路径，就是你现在所在的位置。点击任意一个节点，就能瞬间跳回对话中的那一刻。
+Open the mind-map and you see the shape of your thinking. The glowing path is where you are now. Tap any node to jump straight back to that moment.
+
+6
+00:01:09,680 --> 00:01:19,479
+把重要的节点收藏起来，它们会在导图上闪耀成金色。而搜索，能在你所有的对话里，找到任何一条消息。
+Star the nodes that matter - they light up gold on the map. And search finds any message across every conversation you've had.
+
+7
+00:01:19,979 --> 00:01:33,122
+在底层，同一个引擎可以对接 NVIDIA、OpenAI、Anthropic 和 Gemini。用你自己的密钥，它被保存在设备的安全区域里，每一段对话都只留在你的手机本地。
+Under the hood, one engine speaks to NVIDIA, OpenAI, Anthropic, and Gemini. Bring your own key - it's kept in your device's secure enclave, and every conversation stays local on your phone.
+
+8
+00:01:33,622 --> 00:01:44,071
+它本地优先、注重隐私，用 Flutter 打造，同时支持 Android、iOS 和网页端——每一个像素，我们都精心打磨过。
+It's local-first, private, and built in Flutter for Android, iOS, and the web - with every pixel carefully polished.
+
+9
+00:01:44,571 --> 00:01:52,465
+Dendrite。用分支思考，别走直线。来试试在线演示，也看看我们的代码，链接都在下方。
+Dendrite. Think in branches, not lines. Try the live demo and explore the code - links below.

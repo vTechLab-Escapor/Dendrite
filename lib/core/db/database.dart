@@ -1,8 +1,5 @@
-import 'dart:io';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
+import 'connection/connection.dart';
 
 part 'database.g.dart';
 
@@ -22,7 +19,7 @@ class Messages extends Table {
 
 @DriftDatabase(tables: [Messages])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
+  AppDatabase([QueryExecutor? e]) : super(e ?? openConnection());
 
   @override
   int get schemaVersion => 2;
@@ -98,7 +95,7 @@ class AppDatabase extends _$AppDatabase {
         title = '${title.substring(0, 24)}...';
       }
       if (title.isEmpty) {
-        title = chatId == 'default_chat' ? '黑洞事件视界探究' : '新对话 ($chatId)';
+        title = chatId == 'default_chat' ? 'Black Hole Event Horizon' : 'New Chat ($chatId)';
       }
       sessions.add(MapEntry(chatId, title));
     }
@@ -112,12 +109,4 @@ class AppDatabase extends _$AppDatabase {
 
     return sessions;
   }
-}
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'dendrite.db'));
-    return NativeDatabase(file);
-  });
 }

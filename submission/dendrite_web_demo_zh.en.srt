@@ -1,0 +1,35 @@
+1
+00:00:11,267 --> 00:00:20,833
+This is how we talk to AI today - one message after another, in a single straight line. But thinking doesn't work that way.
+
+2
+00:00:21,333 --> 00:00:30,993
+Meet Dendrite - an AI knowledge space where every conversation is a tree, not a feed. Watch the answer stream in, in real time.
+
+3
+00:00:31,493 --> 00:00:45,564
+Here's the core idea. Select any sentence, and branch. Dendrite spins off a whole new line of inquiry about exactly that, carrying your selection as context. Your main thread stays untouched.
+
+4
+00:00:46,064 --> 00:00:56,560
+Branches can branch. Chase a tangent as far as you want - every detour becomes its own explorable thread instead of burying what came before.
+
+5
+00:00:57,060 --> 00:01:09,180
+Open the mind-map and you see the shape of your thinking. The glowing path is where you are now. Tap any node to jump straight back to that moment.
+
+6
+00:01:09,680 --> 00:01:19,479
+Star the nodes that matter - they light up gold on the map. And search finds any message across every conversation you've had.
+
+7
+00:01:19,979 --> 00:01:33,122
+Under the hood, one engine speaks to NVIDIA, OpenAI, Anthropic, and Gemini. Bring your own key - it's kept in your device's secure enclave, and every conversation stays local on your phone.
+
+8
+00:01:33,622 --> 00:01:44,071
+It's local-first, private, and built in Flutter for Android, iOS, and the web - with every pixel carefully polished.
+
+9
+00:01:44,571 --> 00:01:52,465
+Dendrite. Think in branches, not lines. Try the live demo and explore the code - links below.

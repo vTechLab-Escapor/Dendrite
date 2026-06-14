@@ -13,6 +13,8 @@ import 'package:dendrite/features/chat/chat_state.dart';
 import 'package:dendrite/features/chat/chat_tree.dart';
 import 'package:dendrite/features/chat/widgets/selection_menu.dart';
 import 'package:dendrite/features/map/widgets/mind_map_canvas.dart';
+import 'package:dendrite/features/chat/demo_hook_stub.dart'
+    if (dart.library.js_interop) 'package:dendrite/features/chat/demo_hook_web.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -49,7 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isDarkMode = false;
   bool _obscureApiKey = true;
   final Set<String> _expandedThinkingNodeIds = {};
-  String _currentLanguage = 'zh'; // Default to Chinese
+  String _currentLanguage = 'zh'; // Default to Chinese (demo recording build; was 'en')
 
   static const Map<String, Map<String, String>> _translations = {
     'zh': {
@@ -113,10 +115,12 @@ class _ChatScreenState extends State<ChatScreen> {
       'branch_input_hint': 'Ask a question based on this context...',
       'branch_route_banner': 'Switched to branched context line',
       'branch_return_main': 'Back to Main',
+      'branch_return_parent': 'Back to Parent',
       'toast_new_chat': 'New chat thread started',
       'toast_branch_saved': '⭐ Message bookmarked successfully!',
       'toast_bookmark_removed': 'Message removed from bookmarks',
       'toast_settings_saved': 'API configuration saved successfully!',
+      'toast_returned_parent': 'Returned to the parent conversation',
       'toast_import_success': 'Data imported and merged successfully!',
       'toast_export_success': 'Data exported successfully',
       'toast_stopped': 'Generation stopped',
@@ -353,7 +357,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // so a missing translation degrades gracefully instead of crashing.
   String _t(String key) =>
       _translations[_currentLanguage]?[key] ??
-      _translations['zh']?[key] ??
+      _translations['en']?[key] ??
       key;
 
   // Search bar controller (results/flags live in the cubit state).
@@ -374,6 +378,8 @@ class _ChatScreenState extends State<ChatScreen> {
     // Surface cubit-originated messages (e.g. streaming errors) as toasts.
     _toastSub = _cubit.toasts.listen(_showToast);
     _cubit.init();
+    // Demo-recording automation hook (web build only; no-op elsewhere).
+    installDemoHooks(_cubit);
   }
 
   @override
@@ -459,7 +465,7 @@ class _ChatScreenState extends State<ChatScreen> {
         for (final file in result.files) {
           if (file.path != null) {
             if (file.size > maxSizeBytes) {
-              _showToast('文件 ${file.name} 超过20MB限制，已跳过');
+              _showToast('File ${file.name} exceeds the 20MB limit, skipped');
               continue;
             }
             validFiles.add(File(file.path!));
@@ -474,14 +480,14 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     } catch (e) {
-      _showToast('无法读取文件: $e');
+      _showToast('Could not read file: $e');
     }
   }
 
   void _previewFile(String path, String name) async {
     final file = File(path);
     if (!await file.exists()) {
-      _showToast('无法预览：原文件已被移动或删除');
+      _showToast('Cannot preview: the original file was moved or deleted');
       return;
     }
     if (!mounted) return;
@@ -548,7 +554,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   return const Center(child: CircularProgressIndicator(color: Colors.grey));
                                 }
                                 if (snapshot.hasError) {
-                                  return Text('读取文本出错: ${snapshot.error}', style: const TextStyle(color: Colors.red));
+                                  return Text('Error reading text: ${snapshot.error}', style: const TextStyle(color: Colors.red));
                                 }
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -556,14 +562,14 @@ class _ChatScreenState extends State<ChatScreen> {
                                     GestureDetector(
                                       onTap: () {
                                         Clipboard.setData(ClipboardData(text: snapshot.data ?? ''));
-                                        _showToast('已复制文件内容');
+                                        _showToast('File content copied');
                                       },
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Icon(Icons.copy, size: 14, color: _isDarkMode ? Colors.white54 : Colors.black54),
                                           const SizedBox(width: 4),
-                                          Text('复制内容', style: TextStyle(color: _isDarkMode ? Colors.white54 : Colors.black54, fontSize: 11)),
+                                          Text('Copy content', style: TextStyle(color: _isDarkMode ? Colors.white54 : Colors.black54, fontSize: 11)),
                                         ],
                                       ),
                                     ),
@@ -595,12 +601,12 @@ class _ChatScreenState extends State<ChatScreen> {
                                 Icon(Icons.insert_drive_file, size: 64, color: _isDarkMode ? Colors.white54 : Colors.black54),
                                 const SizedBox(height: 16),
                                 Text(
-                                  '此类型文件不支持直接预览',
+                                  'This file type cannot be previewed directly',
                                   style: TextStyle(color: _isDarkMode ? Colors.white : Colors.black, fontSize: 13, fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  '文件大小: ${(file.lengthSync() / 1024).toStringAsFixed(1)} KB\n本地路径:\n$path',
+                                  'File size: ${(file.lengthSync() / 1024).toStringAsFixed(1)} KB\nLocal path:\n$path',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(color: Colors.grey, fontSize: 11),
                                 ),
@@ -622,7 +628,12 @@ class _ChatScreenState extends State<ChatScreen> {
   // --- IMPORT & EXPORT ---
   Future<void> _exportConversation() async {
     final path = await _cubit.exportConversation();
-    _showToast(path != null ? '${_t('toast_export_success')}：$path' : '导出失败');
+    _showToast(path != null ? '${_t('toast_export_success')}: $path' : 'Export failed');
+  }
+
+  Future<void> _exportTreeMarkdown() async {
+    final result = await _cubit.exportTreeMarkdown();
+    _showToast(result != null ? 'Markdown exported: $result' : 'Export failed');
   }
 
   Future<void> _importConversation() async {
@@ -632,10 +643,10 @@ class _ChatScreenState extends State<ChatScreen> {
         _showToast(_t('toast_import_success'));
         break;
       case ImportResult.notFound:
-        _showToast('未找到对应的导出 JSON 备份文件，请先导出！');
+        _showToast('No exported JSON backup file found — please export first!');
         break;
       case ImportResult.error:
-        _showToast('导入失败');
+        _showToast('Import failed');
         break;
     }
   }
@@ -737,6 +748,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 _cubit.loadLineage();
               }
             },
+          ),
+          // Export the whole tree to Markdown (feeds the slide-deck pipeline).
+          IconButton(
+            icon: Icon(Icons.ios_share, color: _isDarkMode ? Colors.white : Colors.black, size: 20),
+            tooltip: 'Export tree to Markdown',
+            onPressed: _exportTreeMarkdown,
           ),
           IconButton(
             icon: Icon(Icons.edit, color: _isDarkMode ? Colors.white : Colors.black, size: 20),
@@ -947,7 +964,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildSearchResultsList(Color textCol, Color subTextCol) {
     if (_searchResults.isEmpty) {
       return Center(
-        child: Text('无匹配检索结果', style: TextStyle(color: subTextCol, fontSize: 12)),
+        child: Text('No matching results', style: TextStyle(color: subTextCol, fontSize: 12)),
       );
     }
 
@@ -979,7 +996,7 @@ class _ChatScreenState extends State<ChatScreen> {
       future: _cubit.chatSessions(),
       builder: (context, snapshot) {
         final List<MapEntry<String, String>> sessions = snapshot.data ?? [
-          const MapEntry('default_chat', '黑洞事件视界探究')
+          const MapEntry('default_chat', 'Black Hole Event Horizon')
         ];
 
         return ListView(
@@ -1119,7 +1136,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 const SizedBox(height: 6),
                 _buildDialogField(
                   controller: _baseUrlController,
-                  hint: '基地址...',
+                  hint: 'Base URL...',
                 ),
                 const SizedBox(height: 12),
 
@@ -1152,7 +1169,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 const SizedBox(height: 6),
                 _buildDialogField(
                   controller: _modelNameController,
-                  hint: '模型名称...',
+                  hint: 'Model name...',
                 ),
               ],
             ),
@@ -1272,10 +1289,10 @@ class _ChatScreenState extends State<ChatScreen> {
               mainAxisSpacing: 12,
               childAspectRatio: 2.4,
               children: [
-                _buildPromptCard('🌿 介绍黑洞的“事件视界”', '开始对黑洞进行分叉提问', borderCol),
-                _buildPromptCard('💡 脑暴科幻故事多支线', '分拆出多条故事发展主线', borderCol),
-                _buildPromptCard('🧠 树形对话本地数据库设计', '利用 Drift + SQLite 递归查询', borderCol),
-                _buildPromptCard('✍️ 脑暴 APP 核心价值定位', '体验真正的树状对话优势', borderCol),
+                _buildPromptCard('🌿 解释一下黑洞的"事件视界"', '从黑洞开始，展开分支提问', borderCol),
+                _buildPromptCard('💡 头脑风暴一个科幻故事的支线', '拆分出多条故事线', borderCol),
+                _buildPromptCard('🧠 设计一个树状对话的本地数据库', '用 Drift + SQLite 递归查询', borderCol),
+                _buildPromptCard('✍️ 畅想这个应用的核心价值', '体验树状对话的力量', borderCol),
               ],
             )
           ],
@@ -1703,8 +1720,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   const SizedBox(width: 8),
                   Text(
                     parsed.isThinkingComplete 
-                        ? (isExpanded ? '思考过程 (点击折叠)' : '已完成思考 (点击查看)')
-                        : '深度思考中...',
+                        ? (isExpanded ? 'Reasoning (tap to collapse)' : 'Reasoning complete (tap to view)')
+                        : 'Thinking deeply...',
                     style: TextStyle(
                       color: parsed.isThinkingComplete 
                           ? (_isDarkMode ? Colors.white70 : Colors.black87) 

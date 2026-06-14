@@ -1,7 +1,16 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:dendrite/features/chat/widgets/chat_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // On web, the browser's native context menu would otherwise pre-empt Flutter's
+  // custom selection toolbar (the "🌿 Branch Ask" item). Disable it so right-click
+  // on a text selection shows the in-app Branch menu.
+  if (kIsWeb) {
+    await BrowserContextMenu.disableContextMenu();
+  }
   runApp(const DendriteApp());
 }
 

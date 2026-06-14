@@ -46,3 +46,12 @@ app.*.map.json
 /phone_screenshot*.png
 /screenshot.jpg
 /screenshot.png
+
+# Submission video render toolchain (local Playwright install) + scratch frames
+/submission/intro/.render/
+/submission/**/_*.png
+
+# Cloned third-party Raccoon skill repos (reference only, not part of this project)
+/raccoon_skills/raccoon-ppt-skill/
+/raccoon_skills/raccoon-dataanalysis-skill/
+/android/build/

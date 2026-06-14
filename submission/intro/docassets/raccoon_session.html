@@ -1,0 +1,40 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei",sans-serif}
+body{width:1120px;background:#F3F4F6;padding:22px}
+.win{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.bar{background:#10A37F;color:#fff;padding:12px 18px;font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px}
+.bar small{font-weight:400;opacity:.9;font-size:12px}
+.chat{padding:18px 20px}
+.row{display:flex;margin:14px 0}
+.row.u{justify-content:flex-end}
+.bub{max-width:86%;padding:11px 15px;border-radius:14px;font-size:13.5px;line-height:1.6}
+.u .bub{background:#10A37F;color:#fff;border-bottom-right-radius:4px}
+.a .bub{background:#F4F6F5;color:#1a1a1a;border:1px solid #E3E6E5;border-bottom-left-radius:4px}
+.who{font-size:11px;color:#888;margin:0 6px 3px;display:flex;align-items:center;gap:6px}
+.tag{display:inline-block;background:#E6F4EF;color:#10A37F;border-radius:6px;padding:1px 7px;font-size:10.5px;font-weight:700}
+.a img{width:100%;border:1px solid #E3E6E5;border-radius:8px;margin-top:9px}
+b{color:#0d8f6f}
+.stage{font-size:10.5px;color:#aaa;margin:2px 8px}
+</style></head><body>
+<div class="win">
+  <div class="bar">🦝 办公小浣熊 · 数据分析 Skill <small>via 开放 API（RACCOON_API_TOKEN）· 会话 aac643c6</small></div>
+  <div class="chat">
+
+    <div class="row u"><div><div class="who" style="justify-content:flex-end">我　·　上传 context_cost.csv</div>
+      <div class="bub">这份数据对比了同一棵对话树在不同分支数下两种上下文方式的 token 用量：「线性对话」把所有分支都塞进一条上下文，而「Dendrite 祖先链」只取当前节点到根的路径。请分析随分支数增加两者的差距、计算节省比例，并生成一张清晰的折线对比图。</div></div></div>
+
+    <div class="stage">[ocr] → [generate] → [code] → [execute] → [image]</div>
+    <div class="row a"><div><div class="who"><span class="tag">小浣熊</span> 数据分析 + 代码执行 + 可视化</div>
+      <div class="bub">已完成分析。<b>Dendrite 祖先链上下文与分支「宽度」几乎解耦，只随「深度」增长</b>；线性方式则随分支数线性膨胀。节省比例从 2 分支的 <b>13.13%</b> 升至 10 分支的 <b>80.89%</b>，10 分支时线性方案的 token 已是 Dendrite 的 <b>5.23 倍</b>。
+      <img src="raccoon_chart_0.png"></div></div></div>
+
+    <div class="row u"><div><div class="who" style="justify-content:flex-end">我　·　多轮调优</div>
+      <div class="bub">很好。请在同一组数据上做一次调优：单独画出节省比例(%)随分支数变化的折线图，用线性回归预测分支数为 20 时的节省比例，并在图上标注预测点。</div></div></div>
+
+    <div class="row a"><div><div class="who"><span class="tag">小浣熊</span> 多轮调优 · 回归建模</div>
+      <div class="bub">线性回归（R²=0.826）外推到 x=20 得 <b>169.30%</b>——已超过 100% 理论上限，不符合机理。改用<b>饱和模型</b> y=100·(1−a/(b+x)) 拟合，预测 x=20 时约 <b>90.41%</b>，更可信。两个预测点已在图上标注。
+      <img src="raccoon_chart_turn2_1.png"></div></div></div>
+
+  </div>
+</div>
+</body></html>

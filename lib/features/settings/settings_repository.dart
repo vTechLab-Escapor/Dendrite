@@ -13,6 +13,8 @@ class SettingsRepository {
   static const String _fileName = 'dendrite_settings.json';
 
   // Keys injected at compile time via --dart-define.
+  static const String _glmKeyInjected =
+      String.fromEnvironment('GLM_API_KEY', defaultValue: '');
   static const String _nvKeyInjected =
       String.fromEnvironment('NVIDIA_API_KEY', defaultValue: '');
   static const String _msKeyInjected =
@@ -28,14 +30,21 @@ class SettingsRepository {
     return File(p.join(dir.path, _fileName));
   }
 
-  /// Defaults derived from compile-time keys (NVIDIA preferred, then ModelScope).
+  /// Defaults derived from compile-time keys (GLM preferred, then NVIDIA, then ModelScope).
   ApiConfig defaults() {
-    if (_nvKeyInjected.isNotEmpty) {
+    if (_glmKeyInjected.isNotEmpty) {
+      return const ApiConfig(
+        provider: 'glm',
+        baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+        apiKey: _glmKeyInjected,
+        modelName: 'glm-4-flash',
+      );
+    } else if (_nvKeyInjected.isNotEmpty) {
       return const ApiConfig(
         provider: 'nvidia',
         baseUrl: 'https://integrate.api.nvidia.com/v1',
         apiKey: _nvKeyInjected,
-        modelName: 'meta/llama-3.1-70b-instruct',
+        modelName: 'google/gemma-4-31b-it',
       );
     } else if (_msKeyInjected.isNotEmpty) {
       return const ApiConfig(

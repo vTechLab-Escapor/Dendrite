@@ -10,6 +10,9 @@ import 'package:dendrite/core/models/api_config.dart';
 import 'package:dendrite/core/utils/id_generator.dart';
 import 'package:dendrite/features/chat/chat_repository.dart';
 import 'package:dendrite/features/chat/chat_tree.dart';
+import 'package:dendrite/features/chat/tree_export_stub.dart'
+    if (dart.library.io) 'package:dendrite/features/chat/tree_export_io.dart'
+    if (dart.library.html) 'package:dendrite/features/chat/tree_export_web.dart';
 import 'package:dendrite/features/chat/chat_state.dart';
 import 'package:dendrite/features/settings/settings_repository.dart';
 
@@ -284,7 +287,7 @@ class ChatCubit extends Cubit<ChatState> {
       final list = [...state.currentLineage]
         ..removeWhere((m) => m.id == aiNodeId);
       emit(state.copyWith(isStreaming: false, currentLineage: list));
-      _toastController.add('API调用失败: ${_friendlyError(e)}');
+      _toastController.add('API call failed: ${_friendlyError(e)}');
       await loadLineage();
     }
   }
@@ -294,23 +297,23 @@ class ChatCubit extends Cubit<ChatState> {
     if (errorMsg.contains('HandshakeException') ||
         errorMsg.contains('CERTIFICATE') ||
         errorMsg.contains('TLS')) {
-      return 'TLS证书握手失败 (华为网络安全组件拦截)';
+      return 'TLS handshake failed (blocked by a network security component)';
     } else if (errorMsg.contains('SocketException') ||
         errorMsg.contains('Connection refused')) {
-      return '网络连接被拒绝 (请检查Base URL)';
+      return 'Connection refused (check the Base URL)';
     } else if (errorMsg.contains('Connection timed out') ||
         errorMsg.contains('TimeoutException')) {
-      return '连接超时 (网络不稳定或URL不可达)';
+      return 'Connection timed out (unstable network or unreachable URL)';
     } else if (errorMsg.contains('API Request Failed')) {
       return errorMsg.replaceFirst('Exception: ', '');
     } else if (errorMsg.contains('401') || errorMsg.contains('Unauthorized')) {
-      return 'API密钥无效或已过期 (401 Unauthorized)';
+      return 'Invalid or expired API key (401 Unauthorized)';
     } else if (errorMsg.contains('403') || errorMsg.contains('Forbidden')) {
-      return '无权限访问此模型 (403 Forbidden)';
+      return 'No access to this model (403 Forbidden)';
     } else if (errorMsg.contains('404')) {
-      return '接口地址不存在 (404 Not Found)';
+      return 'Endpoint not found (404 Not Found)';
     } else if (errorMsg.contains('429')) {
-      return '请求频率过高 (429 Rate Limited)';
+      return 'Rate limited (429 Too Many Requests)';
     }
     return errorMsg;
   }
@@ -320,23 +323,26 @@ class ChatCubit extends Cubit<ChatState> {
     final parentMsg = state.currentLineage.firstWhere((m) => m.id == parentId);
     final text = parentMsg.content;
 
-    if (contextText != null && contextText.contains('事件视界')) {
-      return '<think>\n正在分析用户选中的词组「事件视界」...\n在奇点周围，时空的曲率无穷大，我们需要引入广义相对论的时空扭曲模型。\n需要探讨强引力场下的引力红移以及观察者效应（Event Horizon Observable Effect）。\n由此引出事件视界在科学及认知树状图谱中的核心定位。\n</think>\n【分叉探究：事件视界】\n\n黑洞周围的这道不可逾越的边界，代表着**引力奇点的时间停止点**。由于强烈的广义相对论时空拉伸效应，任何从外部观察落向事件视界的物体，其时间流速似乎会无限减慢，最终在视界边缘红移消失。这证明了时空的相对性在这里达到了极致！';
+    final lowerText = text.toLowerCase();
+    final lowerCtx = contextText?.toLowerCase() ?? '';
+
+    if (lowerCtx.contains('event horizon')) {
+      return '<think>\nAnalyzing the selected phrase "event horizon"...\nNear the singularity, spacetime curvature becomes infinite, so we need the spacetime-distortion model of general relativity.\nWe should discuss gravitational redshift under a strong gravitational field and the observer effect.\nThis positions the event horizon at the core of the scientific and cognitive knowledge tree.\n</think>\n**Branch — Event Horizon**\n\nThis impassable boundary around a black hole marks **the point where time itself appears to stop**. Because of the extreme spacetime stretching predicted by general relativity, any object seen falling toward the horizon from the outside appears to slow down without limit, redshifting away at the edge. It is relativity taken to its absolute extreme.';
     }
 
-    if (text.contains('表格') || text.contains('测试') || text.contains('table')) {
-      return '<think>\n分析关于表格和富文本排版的终极美学...\n需要提供一个包含真实多列对比的高对比度 Markdown 表格，并搭配一段代码块以便用户全方位核验。\n确保没有任何硬编码滚动条或视觉突兀的换行。\n</think>\n这里是为你生成的学术多维特征对比表：\n\n| 特征维度 | 经典模型 (Classical) | 树状多分叉 (Dendrite) |\n| :--- | :--- | :--- |\n| **数据流向** | 线性链式 (Linear) | 多叉树无限分裂 (Recursive) |\n| **上下文继承** | 全量重叠 (Overlapped) | 精准 ancestral 谱系溯源 |\n| **高光状态** | 无 inline 强调 | 基线内嵌微缩胶囊徽章 |\n\n你可以自由横向滑动此表格进行查阅。同时，底部已彻底抹去了死锁进度条！';
+    if (lowerText.contains('table') || lowerText.contains('test')) {
+      return '<think>\nThinking about the ideal aesthetics of tables and rich-text layout...\nProvide a high-contrast multi-column Markdown table plus a code block so the user can verify rendering end to end.\nMake sure there are no hard-coded scrollbars or awkward line breaks.\n</think>\nHere is a multi-dimensional comparison table:\n\n| Dimension | Classical chat | Dendrite (tree) |\n| :--- | :--- | :--- |\n| **Data flow** | Linear chain | Recursively branching tree |\n| **Context inheritance** | Whole-history overlap | Precise ancestral lineage |\n| **Emphasis** | No inline accents | Inline capsule badges |\n\nYou can scroll the table horizontally — and notice there is no stuck progress bar at the bottom.';
     }
 
-    if (text.contains('事件视界') || text.contains('黑洞')) {
-      return '<think>\n用户询问关于黑洞或其特征。\n黑洞的基本构造：奇点、事件视界、吸积盘、喷流。\n应该重点阐述其边界效应，并温馨提示 Dendrite 的分支脑暴特性。\n</think>\n黑洞是宇宙中最极端的天体。在其外部存在着被称为“**事件视界**”的最终分界线。一旦穿过该边界，逃逸速度将超越光速，导致任何因果关联彻底切断。\n\n💡 提示：在上方选词即可拉起 context menu 创立新支流（Branch Ask）进行深度脑暴！';
+    if (lowerText.contains('black hole') || lowerText.contains('event horizon')) {
+      return '<think>\nThe user is asking about black holes or their properties.\nBasic structure: singularity, event horizon, accretion disk, jets.\nFocus on the boundary effect, and gently point out Dendrite\'s branch-brainstorming feature.\n</think>\nA black hole is the most extreme object in the universe. Around it lies a final boundary called the "**event horizon**". Once you cross it, the escape velocity exceeds the speed of light and all causal connection to the outside is severed.\n\n💡 Tip: select any text above to bring up the context menu and start a new branch (Branch Ask) to dig deeper!';
     }
 
-    if (text.contains('SQLite') || text.contains('递归')) {
-      return '<think>\n分析关于数据库和树状多支流追踪的递归机制。\nDrift ORM 底层是 SQLite。\n需要展示 WITH RECURSIVE SQL 表达式以便直观证明其毫秒级多代祖先溯源（lineage loading）实力。\n</think>\n在本地 SQLite(Drift) 开发中，利用 `WITH RECURSIVE` 公用表表达式，我们可以向上无限追踪所有的 ancestor 节点：\n\n```sql\nWITH RECURSIVE lineage(id, parent) AS (\n  SELECT id, parent FROM messages WHERE id = ?\n  UNION ALL\n  SELECT m.id, m.parent FROM messages m, lineage l WHERE m.id = l.parent\n)\nSELECT * FROM lineage;\n```\n这让 Dendrite 可以在毫秒内完美、轻量、稳定地在本地复原任意复杂的树状上下文！';
+    if (lowerText.contains('sqlite') || lowerText.contains('recursive')) {
+      return '<think>\nThinking about the database and the recursive mechanism that tracks the conversation tree.\nDrift is built on SQLite.\nShow a WITH RECURSIVE SQL expression to demonstrate millisecond-level ancestor lineage loading.\n</think>\nWith local SQLite (Drift), a `WITH RECURSIVE` common table expression lets us walk every ancestor node upward:\n\n```sql\nWITH RECURSIVE lineage(id, parent) AS (\n  SELECT id, parent FROM messages WHERE id = ?\n  UNION ALL\n  SELECT m.id, m.parent FROM messages m, lineage l WHERE m.id = l.parent\n)\nSELECT * FROM lineage;\n```\nThis lets Dendrite rebuild any complex conversation tree locally in milliseconds — lightweight and reliable.';
     }
 
-    return '<think>\n建立通用分支衍生节点...\n当前上下文父节点：「$parentId」，选中词汇：「${contextText ?? "无"}」。\n分析如何为用户建立独立的多代并行子空间...\n</think>\n这是一个全新的分叉研究方向。Dendrite 已为你将父级节点、选中文字「${contextText ?? "无"}」与本提问融合作为完整的 ancestral context，供该独立分支继续演化。';
+    return '<think>\nBuilding a generic branch node...\nCurrent parent node: "$parentId", selected text: "${contextText ?? "none"}".\nWorking out how to create an independent parallel sub-space for the user...\n</think>\nThis is a brand-new branch of inquiry. Dendrite has merged the parent node, your selected text "${contextText ?? "none"}", and this question into one complete ancestral context, ready for this independent branch to evolve.';
   }
 
   // --- Search & bookmarks ---
@@ -379,6 +385,87 @@ class ChatCubit extends Cubit<ChatState> {
           File(p.join(dir.path, 'dendrite_export_${state.currentChatId}.json'));
       await file.writeAsString(jsonString);
       return file.path;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Serializes the ENTIRE conversation tree (every branch, not just the active
+  /// lineage) into structured Markdown. Branch questions become nested headings
+  /// so a downstream tool (e.g. a slide generator) can turn the knowledge tree
+  /// into an outline. Internal `<think>…</think>` reasoning is stripped.
+  String buildTreeMarkdown() {
+    final nodes = state.allNodesInChat;
+    if (nodes.isEmpty) return '# Dendrite\n\n_(empty conversation)_\n';
+
+    final childrenMap = <String, List<Message>>{};
+    Message? root;
+    for (final n in nodes) {
+      if (n.parentId == null) {
+        root ??= n;
+      } else {
+        childrenMap.putIfAbsent(n.parentId!, () => []).add(n);
+      }
+    }
+    root ??= nodes.first;
+
+    String clean(String s) => s
+        .replaceAll(RegExp(r'<think>[\s\S]*?</think>', multiLine: true), '')
+        .trim();
+    String oneLine(String s) =>
+        s.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    final firstUser =
+        nodes.firstWhere((n) => n.role == 'user', orElse: () => root!);
+    final branchCount =
+        nodes.where((n) => n.associatedSelection != null).length;
+
+    final sb = StringBuffer()
+      ..writeln('# Dendrite — 知识树导出')
+      ..writeln()
+      ..writeln('> **主题：** ${oneLine(firstUser.content)}')
+      ..writeln('>')
+      ..writeln('> **节点数：** ${nodes.length} · **分支数：** $branchCount · '
+          '导出时间：${DateTime.now().toIso8601String().substring(0, 19)}')
+      ..writeln();
+
+    void walk(Message node, int branchDepth) {
+      if (node.role == 'user') {
+        final isBranch = node.associatedSelection != null;
+        final hashes = '#' * ((branchDepth + 2).clamp(2, 6));
+        if (isBranch) {
+          sb
+            ..writeln('$hashes 🌿 分支：「${oneLine(node.associatedSelection!)}」')
+            ..writeln()
+            ..writeln('> 选中上下文：${oneLine(node.associatedSelection!)}')
+            ..writeln();
+        } else {
+          sb..writeln('$hashes 提问')..writeln();
+        }
+        sb..writeln('**Q：** ${clean(node.content)}')..writeln();
+      } else {
+        sb..writeln('**A：** ${clean(node.content)}')..writeln();
+        if (node.isBookmarked) {
+          sb..writeln('> ⭐ 已收藏的关键结论')..writeln();
+        }
+      }
+      for (final child in childrenMap[node.id] ?? const <Message>[]) {
+        final deeper = child.role == 'user' && child.associatedSelection != null;
+        walk(child, deeper ? branchDepth + 1 : branchDepth);
+      }
+    }
+
+    walk(root, 0);
+    return sb.toString();
+  }
+
+  /// Builds the tree Markdown and saves it (browser download on web, documents
+  /// directory on mobile/desktop). Returns the path/filename, or null on error.
+  Future<String?> exportTreeMarkdown() async {
+    try {
+      final markdown = buildTreeMarkdown();
+      final filename = 'dendrite_tree_${state.currentChatId}.md';
+      return await saveTreeMarkdown(filename, markdown);
     } catch (_) {
       return null;
     }

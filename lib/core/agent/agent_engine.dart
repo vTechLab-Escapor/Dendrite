@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
-import 'dart:io';
 import 'package:dendrite/core/db/database.dart';
+import 'package:dendrite/core/agent/sse/sse_client.dart';
 
 /// The wire format a provider speaks. Most OpenAI-compatible providers
 /// (NVIDIA, ModelScope, OpenAI, Grok, Xiaomi) share one dialect; Anthropic and
@@ -51,78 +51,56 @@ class AgentEngine {
         .toList();
 
     final dialect = dialectFor(provider);
+    final uri = Uri.parse(_endpoint(dialect, providerUrl, modelName, apiKey));
+    final headers = _buildHeaders(dialect, apiKey);
+    final body = jsonEncode(_buildBody(dialect, modelName, messages));
 
-    // dart:io HttpClient for true streaming (avoids Android buffering). Wrapped
-    // in try/finally so the client is always closed — including on cancel.
-    final httpClient = HttpClient();
-    httpClient.connectionTimeout = const Duration(seconds: 30);
+    // All three dialects deliver Server-Sent Events ("data: <json>" lines);
+    // only the per-chunk JSON shape differs (see _extractDelta). The transport
+    // (native dart:io vs web package:http) is chosen by conditional import.
+    String buffer = '';
+    int yieldCount = 0;
+
+    void parseLine(String line, List<String> out) {
+      if (line.isEmpty) return;
+      if (!line.startsWith('data:')) return;
+      final dataContent = line.substring(5).trim();
+      if (dataContent.isEmpty || dataContent == '[DONE]') return;
+      try {
+        final parsed = jsonDecode(dataContent);
+        final delta = _extractDelta(dialect, parsed);
+        if (delta != null && delta.isNotEmpty) out.add(delta);
+      } catch (_) {}
+    }
 
     try {
-      final uri =
-          Uri.parse(_endpoint(dialect, providerUrl, modelName, apiKey));
-      final httpRequest = await httpClient.postUrl(uri);
-      _applyHeaders(httpRequest, dialect, apiKey);
+      await for (final chunk
+          in openSseStream(uri: uri, headers: headers, body: body)) {
+        buffer += chunk;
+        while (buffer.contains('\n')) {
+          final lineEnd = buffer.indexOf('\n');
+          final line = buffer.substring(0, lineEnd).trim();
+          buffer = buffer.substring(lineEnd + 1);
 
-      final bodyBytes =
-          utf8.encode(jsonEncode(_buildBody(dialect, modelName, messages)));
-      httpRequest.headers.set('Content-Length', bodyBytes.length.toString());
-      httpRequest.add(bodyBytes);
-
-      final httpResponse = await httpRequest.close();
-
-      if (httpResponse.statusCode != 200) {
-        final body = await httpResponse.transform(utf8.decoder).join();
-        throw Exception(
-            'API Request Failed (${httpResponse.statusCode}): $body');
-      }
-
-      // All three dialects deliver Server-Sent Events ("data: <json>" lines);
-      // only the per-chunk JSON shape differs (see _extractDelta).
-      String buffer = '';
-      int yieldCount = 0;
-
-      void parseLine(String line, List<String> out) {
-        if (line.isEmpty) return;
-        if (!line.startsWith('data:')) return;
-        final dataContent = line.substring(5).trim();
-        if (dataContent.isEmpty || dataContent == '[DONE]') return;
-        try {
-          final parsed = jsonDecode(dataContent);
-          final delta = _extractDelta(dialect, parsed);
-          if (delta != null && delta.isNotEmpty) out.add(delta);
-        } catch (_) {}
-      }
-
-      try {
-        await for (final chunk in httpResponse.transform(utf8.decoder)) {
-          buffer += chunk;
-          while (buffer.contains('\n')) {
-            final lineEnd = buffer.indexOf('\n');
-            final line = buffer.substring(0, lineEnd).trim();
-            buffer = buffer.substring(lineEnd + 1);
-
-            final out = <String>[];
-            parseLine(line, out);
-            for (final item in out) {
-              yieldCount++;
-              yield item;
-            }
+          final out = <String>[];
+          parseLine(line, out);
+          for (final item in out) {
+            yieldCount++;
+            yield item;
           }
         }
-      } catch (e) {
-        if (yieldCount == 0) rethrow;
       }
+    } catch (e) {
+      if (yieldCount == 0) rethrow;
+    }
 
-      // Parse residual buffer.
-      if (buffer.isNotEmpty) {
-        final out = <String>[];
-        parseLine(buffer.trim(), out);
-        for (final item in out) {
-          yield item;
-        }
+    // Parse residual buffer.
+    if (buffer.isNotEmpty) {
+      final out = <String>[];
+      parseLine(buffer.trim(), out);
+      for (final item in out) {
+        yield item;
       }
-    } finally {
-      httpClient.close();
     }
   }
 
@@ -139,24 +117,26 @@ class AgentEngine {
     }
   }
 
-  void _applyHeaders(
-      HttpClientRequest request, ApiDialect dialect, String apiKey) {
-    request.headers.set('Content-Type', 'application/json');
-    request.headers.set('Accept', 'text/event-stream');
-    request.headers.set('Cache-Control', 'no-cache');
-    request.headers.set('Accept-Encoding', 'identity');
+  Map<String, String> _buildHeaders(ApiDialect dialect, String apiKey) {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Accept-Encoding': 'identity',
+    };
     switch (dialect) {
       case ApiDialect.anthropic:
-        request.headers.set('x-api-key', apiKey);
-        request.headers.set('anthropic-version', '2023-06-01');
+        headers['x-api-key'] = apiKey;
+        headers['anthropic-version'] = '2023-06-01';
         break;
       case ApiDialect.gemini:
         // Authenticated via the URL query string.
         break;
       case ApiDialect.openai:
-        request.headers.set('Authorization', 'Bearer $apiKey');
+        headers['Authorization'] = 'Bearer $apiKey';
         break;
     }
+    return headers;
   }
 
   Map<String, dynamic> _buildBody(
