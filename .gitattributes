@@ -1,0 +1,40 @@
+# Collapse generated/vendored + binary assets in diffs.
+#   -diff              : git shows "Binary files differ" instead of full content
+#   linguist-generated : GitHub collapses the file in PR/commit diffs and
+#                        excludes it from language statistics
+# (No `text`/`eol` rules here on purpose — avoids a line-ending renormalization.)
+
+# Vendored SQLite web worker (generated; ~13k lines)
+web/drift_worker.js   linguist-generated -diff
+
+# WebAssembly / native binaries
+*.wasm                binary linguist-generated
+
+# Video
+*.mp4                 binary linguist-generated
+*.mov                 binary linguist-generated
+*.webm                binary linguist-generated
+
+# Images
+*.png                 binary linguist-generated
+*.jpg                 binary linguist-generated
+*.jpeg                binary linguist-generated
+*.gif                 binary linguist-generated
+*.webp                binary linguist-generated
+*.ico                 binary linguist-generated
+
+# Documents / decks
+*.pdf                 binary linguist-generated
+*.pptx                binary linguist-generated
+*.docx                binary linguist-generated
+*.xlsx                binary linguist-generated
+
+# Audio
+*.wav                 binary linguist-generated
+*.mp3                 binary linguist-generated
+
+# Fonts
+*.ttf                 binary
+*.otf                 binary
+*.woff                binary
+*.woff2               binary
