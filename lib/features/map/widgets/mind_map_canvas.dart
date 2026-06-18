@@ -245,15 +245,29 @@ class _MindMapCanvasState extends State<MindMapCanvas> {
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: circleBg,
+                              color: isActive ? null : circleBg,
+                              gradient: isActive
+                                  ? const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [Color(0xFF19C37D), Color(0xFF10A37F)],
+                                    )
+                                  : null,
                               shape: BoxShape.circle,
                               border: Border.all(color: circleBorder, width: 2.0),
                               boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
-                                )
+                                if (isActive)
+                                  BoxShadow(
+                                    color: const Color(0xFF10A37F).withOpacity(0.45),
+                                    blurRadius: 16,
+                                    spreadRadius: 1,
+                                  )
+                                else
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
+                                  ),
                               ],
                             ),
                             alignment: Alignment.center,
@@ -293,7 +307,7 @@ class _MindMapCanvasState extends State<MindMapCanvas> {
                             ),
                             constraints: const BoxConstraints(maxWidth: 84),
                             child: Text(
-                              node.content,
+                              _nodeLabel(node.content),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -316,6 +330,17 @@ class _MindMapCanvasState extends State<MindMapCanvas> {
         ),
       );
   }
+}
+
+/// Clean a node's raw content into a short label for the tree: drop reasoning
+/// markup (`<think>…</think>` and stray tags) and attachment markdown so the
+/// map shows the actual message, never raw tags.
+String _nodeLabel(String raw) {
+  var s = raw.replaceAll(RegExp(r'<think>[\s\S]*?</think>', caseSensitive: false), '');
+  s = s.replaceAll(RegExp(r'</?think>', caseSensitive: false), '');
+  s = s.replaceAllMapped(RegExp(r'📎 \*\*\[([^\]]+)\]\([^)]+\)\*\*'), (m) => m.group(1)!);
+  s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return s.isEmpty ? '…' : s;
 }
 
 class LinkPainter extends CustomPainter {

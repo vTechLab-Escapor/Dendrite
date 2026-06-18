@@ -16,6 +16,39 @@ import 'package:dendrite/features/map/widgets/mind_map_canvas.dart';
 import 'package:dendrite/features/chat/demo_hook_stub.dart'
     if (dart.library.js_interop) 'package:dendrite/features/chat/demo_hook_web.dart';
 
+/// Brand palette — single, locked accent across the whole app.
+///
+/// Dendrite's identity is the *branch*: the teal below is the one accent the UI
+/// is allowed to reach for, and it is reserved for branch-related affordances
+/// (inline branch chips, the branched-route banner, active tree nodes, the
+/// reasoning/thinking state). Everything else stays neutral monochrome.
+/// Gold is a separate, conventional semantic used ONLY for bookmarks.
+const Color kBrandAccent = Color(0xFF10A37F);
+const Color kBrandAccentBright = Color(0xFF19C37D);
+const Color kBookmarkGold = Color(0xFFFFB800);
+
+/// One corner-radius scale for the page (taste: SHAPE CONSISTENCY LOCK).
+/// pill = fully rounded interactive, lg = cards/surfaces, md = inputs/chips.
+class R {
+  static const double pill = 26;
+  static const double lg = 16;
+  static const double md = 12;
+  static const double sm = 8;
+}
+
+/// Centered reading column. Without this the chat sprawls edge-to-edge on
+/// desktop/web; a fixed measure keeps line length comfortable (taste: contain
+/// page layouts) and matches the mental model of every modern chat UI.
+const double kMaxContentWidth = 760;
+
+/// Wraps [child] in a centred, width-capped column.
+Widget _centered(Widget child) => Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: kMaxContentWidth),
+        child: child,
+      ),
+    );
+
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
@@ -1030,12 +1063,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 dense: true,
                 selected: isCurrent,
                 selectedColor: _isDarkMode ? Colors.white : Colors.black,
-                selectedTileColor: _isDarkMode ? const Color(0xFF1F1F1F) : const Color(0xFFEFEFEF),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                selectedTileColor: kBrandAccent.withOpacity(_isDarkMode ? 0.12 : 0.08),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(R.sm)),
                 leading: Icon(
                   isCurrent ? Icons.chat_bubble : Icons.chat_bubble_outline,
                   color: isCurrent
-                      ? (_isDarkMode ? Colors.white : Colors.black)
+                      ? (_isDarkMode ? kBrandAccentBright : kBrandAccent)
                       : (_isDarkMode ? Colors.white54 : Colors.black54),
                   size: 14,
                 ),
@@ -1240,45 +1273,60 @@ class _ChatScreenState extends State<ChatScreen> {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Neural visual logo
+            // Neural visual logo — accent-tinted halo reinforces the "branch" identity.
             Container(
-              width: 60,
-              height: 60,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
-                color: (_isDarkMode ? Colors.white : Colors.black).withOpacity(0.08),
+                gradient: RadialGradient(
+                  colors: [
+                    kBrandAccent.withOpacity(_isDarkMode ? 0.22 : 0.14),
+                    kBrandAccent.withOpacity(0.0),
+                  ],
+                ),
                 shape: BoxShape.circle,
-                border: Border.all(color: (_isDarkMode ? Colors.white : Colors.black).withOpacity(0.2), width: 1.5),
+                border: Border.all(color: kBrandAccent.withOpacity(0.35), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: kBrandAccent.withOpacity(_isDarkMode ? 0.30 : 0.18),
+                    blurRadius: 28,
+                    spreadRadius: -4,
+                  ),
+                ],
               ),
               child: Center(
                 child: CustomPaint(
-                  size: const Size(34, 34),
-                  painter: DendriteLogoPainter(color: _isDarkMode ? Colors.white70 : Colors.black87),
+                  size: const Size(38, 38),
+                  painter: DendriteLogoPainter(color: kBrandAccent),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
             Text(
               _t('welcome_title'),
               style: TextStyle(
                 color: textCol,
-                fontSize: 18,
+                fontSize: 22,
                 fontWeight: FontWeight.w600,
-                letterSpacing: -0.5,
+                letterSpacing: -0.6,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               _t('welcome_subtitle'),
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 11,
+              style: TextStyle(
+                color: _isDarkMode ? const Color(0xFF8E8E8F) : const Color(0xFF8A8A8A),
+                fontSize: 12.5,
                 fontWeight: FontWeight.w500,
+                letterSpacing: 0.1,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 34),
             
             // Quick start capsules
             GridView.count(
@@ -1297,54 +1345,81 @@ class _ChatScreenState extends State<ChatScreen> {
             )
           ],
         ),
+        ),
       ),
     );
   }
 
   Widget _buildPromptCard(String title, String subtitle, Color borderCol) {
-    return GestureDetector(
-      onTap: () {
-        _controller.text = title.substring(2); // Strip emoji
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderCol, width: 1.0),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: _isDarkMode ? Colors.white : Colors.black,
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
+    final cardFill = _isDarkMode ? const Color(0xFF141414) : const Color(0xFFFAFAFA);
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(R.lg),
+      child: InkWell(
+        onTap: () {
+          _controller.text = title.substring(2); // Strip emoji
+        },
+        borderRadius: BorderRadius.circular(R.lg),
+        splashColor: kBrandAccent.withOpacity(0.10),
+        highlightColor: kBrandAccent.withOpacity(0.05),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+          decoration: BoxDecoration(
+            color: cardFill,
+            borderRadius: BorderRadius.circular(R.lg),
+            border: Border.all(color: borderCol, width: 1.0),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Accent leading bar ties the card to the brand branch colour.
+              Container(
+                width: 3,
+                decoration: BoxDecoration(
+                  color: kBrandAccent.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 9.5,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: _isDarkMode ? Colors.white : Colors.black,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.1,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: _isDarkMode ? const Color(0xFF8E8E8F) : const Color(0xFF9A9A9A),
+                        fontSize: 9.5,
+                        height: 1.35,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildMessageList(Color textCol, Color subTextCol, Color borderCol) {
-    return ListView.builder(
+    return _centered(ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
       itemCount: _currentLineage.length,
@@ -1504,7 +1579,7 @@ class _ChatScreenState extends State<ChatScreen> {
           );
         }
       },
-    );
+    ));
   }
 
   Widget _buildThinkingIndicator(Color textCol) {
@@ -1513,12 +1588,12 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _ThinkingDots(color: textCol),
+          _ThinkingDots(color: _isDarkMode ? kBrandAccentBright : kBrandAccent),
           const SizedBox(width: 10),
           Text(
             _t('thinking_active'),
             style: TextStyle(
-              color: _isDarkMode ? Colors.amber : const Color(0xFFB8860B),
+              color: _isDarkMode ? kBrandAccentBright : kBrandAccent,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -1632,24 +1707,24 @@ class _ChatScreenState extends State<ChatScreen> {
                 _cubit.openBranch(deepestId);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
-                  color: _isDarkMode ? const Color(0x2BFFFFFF) : const Color(0x1F000000),
-                  borderRadius: BorderRadius.circular(5),
-                  border: Border.all(color: _isDarkMode ? const Color(0x40FFFFFF) : const Color(0x40000000), width: 0.8),
+                  color: kBrandAccent.withOpacity(_isDarkMode ? 0.20 : 0.12),
+                  borderRadius: BorderRadius.circular(R.sm),
+                  border: Border.all(color: kBrandAccent.withOpacity(0.45), width: 0.8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.alt_route, size: 10, color: _isDarkMode ? Colors.white : Colors.black),
-                    const SizedBox(width: 3),
+                    Icon(Icons.alt_route, size: 11, color: _isDarkMode ? kBrandAccentBright : kBrandAccent),
+                    const SizedBox(width: 4),
                     Text(
                       text.substring(seg.start, seg.end),
                       style: TextStyle(
-                        color: _isDarkMode ? Colors.white : Colors.black,
+                        color: _isDarkMode ? kBrandAccentBright : kBrandAccent,
                         fontSize: 12.5,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -1709,23 +1784,23 @@ class _ChatScreenState extends State<ChatScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    parsed.isThinkingComplete 
+                    parsed.isThinkingComplete
                         ? (isExpanded ? Icons.psychology_outlined : Icons.psychology)
                         : Icons.insights,
                     size: 16,
-                    color: parsed.isThinkingComplete 
-                        ? (_isDarkMode ? Colors.white70 : Colors.black87) 
-                        : Colors.amber,
+                    color: parsed.isThinkingComplete
+                        ? (_isDarkMode ? Colors.white70 : Colors.black87)
+                        : (_isDarkMode ? kBrandAccentBright : kBrandAccent),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    parsed.isThinkingComplete 
+                    parsed.isThinkingComplete
                         ? (isExpanded ? 'Reasoning (tap to collapse)' : 'Reasoning complete (tap to view)')
                         : 'Thinking deeply...',
                     style: TextStyle(
-                      color: parsed.isThinkingComplete 
-                          ? (_isDarkMode ? Colors.white70 : Colors.black87) 
-                          : Colors.amber,
+                      color: parsed.isThinkingComplete
+                          ? (_isDarkMode ? Colors.white70 : Colors.black87)
+                          : (_isDarkMode ? kBrandAccentBright : kBrandAccent),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1746,12 +1821,11 @@ class _ChatScreenState extends State<ChatScreen> {
             Container(
               margin: const EdgeInsets.only(left: 6, bottom: 16),
               padding: const EdgeInsets.only(left: 14, top: 4, bottom: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   left: BorderSide(
-                    color: Color(0xFF333333),
+                    color: kBrandAccent.withOpacity(_isDarkMode ? 0.45 : 0.30),
                     width: 1.5,
-                    style: BorderStyle.solid,
                   ),
                 ),
               ),
@@ -1893,7 +1967,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildInputPill(Color textCol, Color subTextCol, Color inputBg, Color borderCol) {
-    return Padding(
+    return _centered(Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 8),
       child: Column(
         children: [
@@ -1901,22 +1975,22 @@ class _ChatScreenState extends State<ChatScreen> {
           if (_currentLineage.any((m) => m.associatedSelection != null))
             Container(
               margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(
-                color: _isDarkMode ? const Color(0x1FFFFFFF) : const Color(0x0D000000), // Clean monochrome background
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _isDarkMode ? const Color(0x40FFFFFF) : const Color(0x40000000)),
+                color: kBrandAccent.withOpacity(_isDarkMode ? 0.14 : 0.09),
+                borderRadius: BorderRadius.circular(R.md),
+                border: Border.all(color: kBrandAccent.withOpacity(0.40)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.account_tree, color: _isDarkMode ? Colors.white70 : Colors.black87, size: 14),
+                      Icon(Icons.account_tree, color: _isDarkMode ? kBrandAccentBright : kBrandAccent, size: 14),
                       const SizedBox(width: 6),
                       Text(
-                        _t('branch_route_banner'), 
-                        style: TextStyle(color: _isDarkMode ? Colors.white70 : Colors.black87, fontSize: 10, fontWeight: FontWeight.bold),
+                        _t('branch_route_banner'),
+                        style: TextStyle(color: _isDarkMode ? kBrandAccentBright : kBrandAccent, fontSize: 10, fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
@@ -1925,9 +1999,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: Text(
                       _t('branch_return_parent'),
                       style: TextStyle(
-                        color: _isDarkMode ? Colors.white : Colors.black, 
-                        fontSize: 10, 
-                        fontWeight: FontWeight.bold, 
+                        color: _isDarkMode ? kBrandAccentBright : kBrandAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
                         decoration: TextDecoration.underline,
                       ),
                     ),
@@ -2000,8 +2074,17 @@ class _ChatScreenState extends State<ChatScreen> {
           Container(
             decoration: BoxDecoration(
               color: inputBg,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(R.pill),
               border: Border.all(color: borderCol, width: 0.5),
+              boxShadow: [
+                BoxShadow(
+                  color: _isDarkMode
+                      ? Colors.black.withOpacity(0.35)
+                      : Colors.black.withOpacity(0.05),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: Row(
@@ -2060,7 +2143,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 
