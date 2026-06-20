@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>*{margin:0;padding:0}html,body{background:transparent}#logo{display:block}</style>
+</head>
+<body>
+<img id="logo" />
+<canvas id="c" style="display:none"></canvas>
+<script>
+// Renders logo.png full-bleed at an exact pixel size for an Android launcher
+// density, and samples the corner pixel so the adaptive-icon background can be
+// matched seamlessly. Driven by tool/icon/generate.mjs.
+const P = new URLSearchParams(location.search);
+const S = parseInt(P.get('size') || '432', 10);
+const img = document.getElementById('logo');
+img.style.objectFit = 'cover';
+img.onload = () => {
+  const c = document.getElementById('c');
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  const p = ctx.getImageData(3, 3, 1, 1).data;
+  const hex = (v) => v.toString(16).padStart(2, '0');
+  window.__bg = '#' + hex(p[0]) + hex(p[1]) + hex(p[2]);
+  img.style.width = S + 'px';
+  img.style.height = S + 'px';
+  window.__ready = true;
+};
+img.src = P.get('logo');
+</script>
+</body>
+</html>

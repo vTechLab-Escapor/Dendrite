@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dendrite/core/models/api_config.dart';
+import 'package:dendrite/features/chat/chat_state.dart' show BackendMode;
 
 /// Persists [ApiConfig]. Non-sensitive fields live in a JSON file in the app
 /// documents directory; the API key lives in the platform secure store
@@ -163,6 +164,49 @@ class SettingsRepository {
       } else {
         await _secureStorage.write(key: _apiKeyStorageKey, value: config.apiKey);
       }
+    } catch (_) {}
+  }
+
+  // --- Edge (local MNN) config + backend mode -------------------------------
+  // Kept in a separate file; the local key ('sk-local') is a non-secret
+  // placeholder the local server ignores, so it lives in plain JSON.
+  static const String _edgeFileName = 'dendrite_edge.json';
+
+  Future<File> _edgeFile() async {
+    final dir = await getApplicationDocumentsDirectory();
+    return File(p.join(dir.path, _edgeFileName));
+  }
+
+  Future<({ApiConfig config, BackendMode mode})> loadEdge(
+      ApiConfig fallback, BackendMode fallbackMode) async {
+    try {
+      final file = await _edgeFile();
+      if (await file.exists()) {
+        final data = jsonDecode(await file.readAsString());
+        final cfg = ApiConfig(
+          provider: data['provider'] ?? fallback.provider,
+          baseUrl: data['base_url'] ?? fallback.baseUrl,
+          apiKey: data['api_key'] ?? fallback.apiKey,
+          modelName: data['model_name'] ?? fallback.modelName,
+        );
+        final mode =
+            data['mode'] == 'edge' ? BackendMode.edge : BackendMode.cloud;
+        return (config: cfg, mode: mode);
+      }
+    } catch (_) {}
+    return (config: fallback, mode: fallbackMode);
+  }
+
+  Future<void> saveEdge(ApiConfig config, BackendMode mode) async {
+    try {
+      final file = await _edgeFile();
+      await file.writeAsString(jsonEncode({
+        'provider': config.provider,
+        'base_url': config.baseUrl,
+        'api_key': config.apiKey,
+        'model_name': config.modelName,
+        'mode': mode == BackendMode.edge ? 'edge' : 'cloud',
+      }));
     } catch (_) {}
   }
 }

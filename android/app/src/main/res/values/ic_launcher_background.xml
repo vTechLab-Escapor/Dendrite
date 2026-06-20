@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sampled from logo.png so the adaptive icon blends seamlessly. -->
+    <color name="ic_launcher_background">#020303</color>
+</resources>
