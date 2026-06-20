@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="logo.png" alt="Dendrite logo" width="340"/>
+
 # 🌿 Dendrite
 
 ### Think in branches, not lines.
@@ -24,12 +26,39 @@ In Dendrite, a conversation is a **tree**. Highlight any phrase in any message a
 
 ---
 
+## 📸 See it in action
+
+<div align="center">
+
+<img src="docs/img/mindmap.png" alt="Live mind-map of a branched conversation" width="780"/>
+
+<sub>The whole conversation as a living mind-map — every branch navigable, the active path highlighted.</sub>
+
+</div>
+
+<table>
+<tr>
+<td width="50%" valign="top">
+<img src="docs/img/home.png" alt="Paste an arXiv or GitHub link to analyze"/>
+<br/><sub><b>Paste an arXiv / GitHub link</b> → Dendrite fetches it and grows a multi-branch analysis tree.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="docs/img/settings.png" alt="Edge and Cloud backend settings"/>
+<br/><sub><b>Edge ↔ Cloud</b> — a local Qwen model via MNN, or any provider. Your keys, on-device.</sub>
+</td>
+</tr>
+</table>
+
+---
+
 ## ✨ Key Features
 
 | | Feature | Description |
 |---|---|---|
 | 🌳 | **Non-linear branching** | Select any text in any reply and branch off it. Each branch carries its selection as context, so the AI knows exactly what you're drilling into. |
 | 🗺️ | **Live mind-map canvas** | The entire conversation rendered as an interactive tree. Pan, zoom, tap a node to jump there. The active lineage is highlighted; bookmarked nodes are starred. |
+| 🌿 | **arXiv / GitHub analysis** | Paste a paper or repo link — Dendrite fetches it and auto-grows a multi-branch analysis tree (core idea, method, experiments, limitations…), each branch answered by your chosen model. |
+| 📱 | **On-device + cloud (hybrid)** | Run a local **Qwen** model through **MNN** (Arm SME2-ready) for offline, private, zero-cost inference — or switch to the cloud per chat, even **per branch**. Core interaction works fully offline. |
 | 🧠 | **Lineage-aware context** | The model only ever sees the ancestor path of your current node (a single recursive SQL CTE), not the whole tree — focused context, lower token cost. |
 | 🔀 | **Multi-provider AI** | One engine, three wire dialects: **OpenAI-compatible** (NVIDIA NIM, ModelScope, OpenAI, Grok, Xiaomi…), **Anthropic**, and **Google Gemini**. Switch in Settings. |
 | ⚡ | **True real-time streaming** | Token-by-token SSE via `dart:io` `HttpClient`, deliberately bypassing the Android `HttpURLConnection` buffering that stalls `package:http`. |
