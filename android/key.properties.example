@@ -1,0 +1,16 @@
+# Copy this file to android/key.properties and fill in real values.
+# android/key.properties is gitignored — NEVER commit it or the .jks keystore.
+#
+# Generate an upload keystore (one-time):
+#   keytool -genkey -v -keystore upload-keystore.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# Then enroll in Play App Signing (Play Console handles the final app-signing
+# key; this keystore is only your *upload* key). Keep the .jks + passwords
+# backed up somewhere safe — losing the upload key means contacting Google to reset.
+
+storePassword=changeit
+keyPassword=changeit
+keyAlias=upload
+# Path to the .jks, relative to the android/app module (or absolute):
+storeFile=../upload-keystore.jks
